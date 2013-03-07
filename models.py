@@ -1,4 +1,4 @@
-from datetime import datetime, date
+from datetime import datetime
 from itertools import chain
 
 from mongoengine import (connect, DateTimeField, Document, IntField, ReferenceField, StringField)
@@ -14,7 +14,7 @@ def group_n(i, n):
         yield current
 
 def date_from_iso(dt_str):
-    return date.strptime(dt_str, '%Y-%m-%d')
+    return datetime.strptime(dt_str, '%Y-%m-%d').date()
 
 def str_to_legs(legs_str):
     for ends, date_str in group_n(legs_str.split('/'), 2):
