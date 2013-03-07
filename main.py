@@ -41,8 +41,8 @@ def get_quotes(plan):
 
         if position == 1:
             print plan.legs_friendly
-            print price
-            print flights
+            print price, 'quid'
+            print itinerary.flights_friendly
             print
 
 def run():

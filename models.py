@@ -59,7 +59,7 @@ class Itinerary(Document):
     flights = StringField(required=True)
 
     @property
-    def friendly_fligts(self):
+    def flights_friendly(self):
         return '\n'.join(
                 ' '.join(f) for f in group_n(self.flights.split('\n'), 6))
 
