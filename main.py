@@ -45,11 +45,17 @@ def get_quotes(plan):
             print itinerary.flights_friendly
             print
 
+def safe_get_quotes(plan):
+    try:
+        get_quotes(plan)
+    except Exception, e:
+        print 'Caught exception processing', plan.legs_friendly, e
+
 def run():
     while True:
         ensure_plans()
         for plan in Plan.objects.all():
-            get_quotes(plan)
+            safe_get_quotes(plan)
         sleep(60*60)
 
 if __name__ == '__main__':
