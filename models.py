@@ -75,3 +75,9 @@ class Quote(Document):
     price = IntField(required=True)
     position = IntField(required=True)
     collected_dt = DateTimeField(required=True, default=datetime.now)
+
+    meta = {
+            'indexes': [
+                {'fields': ('itinerary', 'collected_dt')},
+                ]
+            }
