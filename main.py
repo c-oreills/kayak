@@ -6,6 +6,14 @@ from selenium.common import exceptions
 from models import Itinerary, Plan, Quote
 from potential_plans import ensure_plans
 
+try:
+    from email_creds import EMAIL_CREDENTIALS, TO_ADDRS
+except ImportError:
+    EMAIL_CREDENTIALS = None
+else:
+    import libgmail
+    mail_account = libgmail.GmailAccount(*EMAIL_CREDENTIALS)
+
 browser = webdriver.Firefox()
 
 def get_quotes(plan):
@@ -36,14 +44,45 @@ def get_quotes(plan):
         price, flights = nth_cheapest(position)
         itinerary, _ = Itinerary.objects.get_or_create(
                 flights=flights, plan=plan)
-        Quote.objects.create(
+        quote = Quote.objects.create(
                 itinerary=itinerary, price=price, position=position)
 
         if position == 1:
-            print plan.legs_friendly
-            print price, 'quid'
-            print itinerary.flights_friendly
-            print
+            display(plan, itinerary, quote)
+            send_email(plan, itinerary, quote)
+
+def display(plan, itinerary, quote):
+    print plan.legs_friendly
+    print quote.price, 'quid'
+    print itinerary.flights_friendly
+    print
+
+def send_email(plan, itinerary, quote):
+    if not EMAIL_CREDENTIALS:
+        print 'No email creds, skipping'
+        return
+    quotes = itinerary.quote_set.order_by('-collected_dt').limit(2)
+    if len(quotes) < 2:
+        return
+    last_quote, sec_last_quote = quotes
+    assert last_quote.id == quote.id
+    if last_quote.price >= sec_last_quote.price:
+        return
+
+    print 'Cheaper, sending mail'
+    to_addrs = '; '.join(TO_ADDRS)
+    price_diff = sec_last_quote.price - last_quote.price
+    subject = '£{pd} drop in {l}'.format(pd=price_diff, l=plan.legs_friendly)
+
+    body = '\n'.join((
+        '£{p} (was £{pp})'.format(p=quote.price, pp=sec_last_quote.price),
+        itinerary.flights_friendly,))
+
+    message = libgmail.GmailComposedMessage(
+            to=to_addrs,
+            subject=subject,
+            body=body)
+    mail_account.sendMessage(message)
 
 def safe_get_quotes(plan):
     try:
