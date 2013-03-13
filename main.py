@@ -9,10 +9,16 @@ from models import Itinerary, Plan, Quote
 from mailer import sendmail
 from potential_plans import ensure_plans
 
+HEADLESS = True
 
 browser = None
 
 def set_browser():
+    if HEADLESS:
+        from pyvirtualdisplay import Display
+
+        display = Display(visible=0, size=(800, 600))
+        display.start()
     global browser
     browser = webdriver.Firefox()
 
