@@ -1,7 +1,8 @@
 from datetime import datetime
 from itertools import chain
 
-from mongoengine import (connect, DateTimeField, Document, IntField, ReferenceField, StringField)
+from mongoengine import (connect, queryset_manager, DateTimeField, Document,
+        IntField, ReferenceField, StringField)
 
 connect('kayak')
 
@@ -68,6 +69,10 @@ class Itinerary(Document):
                 {'fields': ('plan', 'flights'), 'unique': True},
                 ]
             }
+
+    @property
+    def quote_set(self):
+        return Quote.objects.filter(itinerary=self)
 
 
 class Quote(Document):

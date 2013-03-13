@@ -1,20 +1,20 @@
+import sys
 from time import sleep
+from traceback import print_tb
 
 from selenium import webdriver
 from selenium.common import exceptions
 
 from models import Itinerary, Plan, Quote
+from mailer import sendmail
 from potential_plans import ensure_plans
 
-try:
-    from email_creds import EMAIL_CREDENTIALS, TO_ADDRS
-except ImportError:
-    EMAIL_CREDENTIALS = None
-else:
-    import libgmail
-    mail_account = libgmail.GmailAccount(*EMAIL_CREDENTIALS)
 
-browser = webdriver.Firefox()
+browser = None
+
+def set_browser():
+    global browser
+    browser = webdriver.Firefox()
 
 def get_quotes(plan):
     browser.get(plan.url)
@@ -58,9 +58,6 @@ def display(plan, itinerary, quote):
     print
 
 def send_email(plan, itinerary, quote):
-    if not EMAIL_CREDENTIALS:
-        print 'No email creds, skipping'
-        return
     quotes = itinerary.quote_set.order_by('-collected_dt').limit(2)
     if len(quotes) < 2:
         return
@@ -70,27 +67,26 @@ def send_email(plan, itinerary, quote):
         return
 
     print 'Cheaper, sending mail'
-    to_addrs = '; '.join(TO_ADDRS)
     price_diff = sec_last_quote.price - last_quote.price
-    subject = '£{pd} drop in {l}'.format(pd=price_diff, l=plan.legs_friendly)
+    subject = '{pd} quid drop in {l}'.format(pd=price_diff, l=plan.legs_friendly)
 
     body = '\n'.join((
-        '£{p} (was £{pp})'.format(p=quote.price, pp=sec_last_quote.price),
+        '{p} quid (was {pp})'.format(p=quote.price, pp=sec_last_quote.price),
         itinerary.flights_friendly,))
 
-    message = libgmail.GmailComposedMessage(
-            to=to_addrs,
-            subject=subject,
-            body=body)
-    mail_account.sendMessage(message)
+    sendmail(subject, body)
 
 def safe_get_quotes(plan):
     try:
         get_quotes(plan)
     except Exception, e:
-        print 'Caught exception processing', plan.legs_friendly, e
+        print 'Caught exception processing', plan.legs_friendly
+        _, _, tb = sys.exc_info()
+        print_tb(tb)
+        print e
 
 def run():
+    set_browser()
     while True:
         ensure_plans()
         for plan in Plan.objects.all():
