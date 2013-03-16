@@ -9,8 +9,9 @@ app = Flask(__name__)
 #app.debug = True
 
 def get_series(plan):
-    series = [[[1000 * int(mktime(q.collected_dt.timetuple())), q.price]
-            for q in i.quote_set]
+    series = [{
+        'data': [[1000 * int(mktime(q.collected_dt.timetuple())), q.price] for q in i.quote_set],
+        'label': i.flights_friendly}
             for i in plan.itinerary_set]
     return series
 
