@@ -1,13 +1,23 @@
 from email.MIMEMultipart import MIMEMultipart
 from email.MIMEText import MIMEText
 from email_creds import EMAIL_CREDENTIALS, TO_ADDRS
+import smtplib
+import sys
+from traceback import print_tb
+
 SENDER = 'El Kayak Monitore'
 
 session = None
 
 def setup_session():
     global session
-    import smtplib
+    if session:
+        try:
+            session.quit()
+        except Exception, e:
+            print 'Error quitting session (continuing anyway):', e
+            _, _, tb = sys.exc_info()
+            print_tb(tb)
     session = smtplib.SMTP('smtp.gmail.com', 587)
     session.ehlo()
     session.starttls()
@@ -25,4 +35,10 @@ def sendmail(subject, body):
     body = MIMEText(body)
     msg.attach(body)
 
-    session.sendmail(msg['From'], msg['To'].split(', '), msg.as_string())
+    for _ in xrange(5):
+        try:
+            session.sendmail(msg['From'], msg['To'].split(', '), msg.as_string())
+        except smtplib.SMTPServerDisconnected:
+            setup_session()
+        else:
+            break
