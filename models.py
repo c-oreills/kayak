@@ -1,7 +1,7 @@
 from datetime import datetime
 from itertools import chain
 
-from mongoengine import (connect, queryset_manager, DateTimeField, Document,
+from mongoengine import (connect, DateTimeField, Document,
         IntField, ReferenceField, StringField)
 
 connect('kayak')
