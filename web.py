@@ -9,9 +9,9 @@ app = Flask(__name__)
 #app.debug = True
 
 def get_series(plan):
-    series = [[[mktime(q.collected_dt.timetuple()), q.price]
-            for q in i.quote_set.all()]
-            for i in plan.itinerary_set.all()]
+    series = [[[1000 * int(mktime(q.collected_dt.timetuple())), q.price]
+            for q in i.quote_set]
+            for i in plan.itinerary_set]
     return series
 
 @app.route('/')
