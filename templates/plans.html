@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% block body %}
+    {% for plan in plans %}
+        <div id='plan-{{ plan.id }}'>
+            <h3>{{ plan.legs_friendly }}</h3>
+            <div id='plot-{{ plan.id }}' style='width:600px;height:300px;'></div>
+            <script type="text/javascript">
+            $(function () {
+                $.plot($('#plot-{{ plan.id }}'), {{ series[plan] }});
+            });
+            </script>
+        </div>
+    {% endfor %}
+{% endblock %}

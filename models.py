@@ -37,6 +37,10 @@ class Plan(Document):
     legs_str = StringField(required=True)
 
     @property
+    def itinerary_set(self):
+        return Itinerary.objects.filter(plan=self)
+
+    @property
     def legs(self):
         return str_to_legs(self.legs_str)
 
