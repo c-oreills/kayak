@@ -6,7 +6,32 @@
             <div id='plot-{{ plan.id }}' style='width:600px;height:300px;'></div>
             <script type="text/javascript">
             $(function () {
-                $.plot($('#plot-{{ plan.id }}'), {{ series[plan] }});
+                    var plot_id = '#plot-{{ plan.id }}';
+                    console.log(plot_id);
+                    var series = {{ series[plan] }};
+                    var options = {
+                        xaxis: {
+                            mode: "time",
+                            //minTickSize: [1, "hour"],
+                            twelveHourClock: true
+                            },
+                        selection: {
+                            mode: "x"
+                        }, 
+                    };
+                    var plotsky = function (extra_options) {
+                        $.plot(plot_id, series, $.extend(true, {}, options, extra_options));
+                    };
+                    plotsky({});
+
+                    $(plot_id).bind("plotselected", function (event, ranges) {
+                        plotsky({
+                            xaxis: {
+                                min: ranges.xaxis.from,
+                                max: ranges.xaxis.to
+                            }
+                        });
+                    });
             });
             </script>
         </div>
