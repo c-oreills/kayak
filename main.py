@@ -14,16 +14,24 @@ NOISY = False
 HEADLESS = True
 
 browser = None
+display = None
 last_checkin = datetime.now()
 
 def set_browser():
+    global browser, display
     if HEADLESS:
         from pyvirtualdisplay import Display
 
         display = Display(visible=0, size=(800, 600))
         display.start()
-    global browser
     browser = webdriver.Firefox()
+
+def unset_browser():
+    global browser, display
+    if browser:
+        browser.quit()
+    if display:
+        display.stop()
 
 def get_quotes(plan):
     browser.get(plan.url)
@@ -124,13 +132,14 @@ def safe_get_quotes(plan):
             print_tb(tb)
 
 def run():
-    set_browser()
+    ensure_plans()
     while True:
-        ensure_plans()
+        set_browser()
         for plan in Plan.objects.all():
             safe_get_quotes(plan)
         print 'Checkin:', datetime.now()
         checkin_mail()
+        unset_browser()
         sleep(60*60)
 
 if __name__ == '__main__':
