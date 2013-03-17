@@ -72,10 +72,10 @@ def get_quotes(plan):
 
         if position == 1:
             if NOISY:
-                display(plan, itinerary, quote)
+                term_display(plan, itinerary, quote)
             send_price_email(plan, itinerary, quote)
 
-def display(plan, itinerary, quote):
+def term_display(plan, itinerary, quote):
     print plan.legs_friendly
     print quote.price, 'quid'
     print itinerary.flights_friendly
@@ -90,7 +90,7 @@ def send_price_email(plan, itinerary, quote):
     if last_quote.price >= sec_last_quote.price:
         return
 
-    display(plan, itinerary, quote)
+    term_display(plan, itinerary, quote)
     print 'Cheaper, sending mail'
     price_diff = sec_last_quote.price - last_quote.price
     subject = '{pd} quid drop in {l}'.format(pd=price_diff, l=plan.legs_friendly)
@@ -102,7 +102,7 @@ def send_price_email(plan, itinerary, quote):
     sendmail(subject, body)
 
 def error_mail(plan, e, tb):
-    subject = 'Error: {e}'.format(e)
+    subject = 'Error: {e}'.format(e=e)
     body = '\n'.join([
         plan.legs_friendly,
         format_tb(tb)
