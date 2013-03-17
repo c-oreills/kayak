@@ -91,8 +91,11 @@ def send_price_email(plan, itinerary, quote):
         return
 
     term_display(plan, itinerary, quote)
-    print 'Cheaper, sending mail'
     price_diff = sec_last_quote.price - last_quote.price
+    if price_diff < 3:
+        print 'Only a bit cheaper, probably exchange rate, ignorez'
+        return
+    print 'Cheaper, sending mail'
     subject = '{pd} quid drop in {l}'.format(pd=price_diff, l=plan.legs_friendly)
 
     body = '\n'.join((
