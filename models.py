@@ -41,6 +41,10 @@ class Plan(Document):
         return Itinerary.objects.filter(plan=self)
 
     @property
+    def quote_set(self):
+        return Quote.objects.filter(plan=self)
+
+    @property
     def legs(self):
         return str_to_legs(self.legs_str)
 
@@ -80,6 +84,7 @@ class Itinerary(Document):
 
 
 class Quote(Document):
+    plan = ReferenceField(Plan, required=True)
     itinerary = ReferenceField(Itinerary, required=True)
     price = IntField(required=True)
     position = IntField(required=True)

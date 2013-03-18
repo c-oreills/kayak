@@ -27,7 +27,6 @@ def set_browser():
     browser = webdriver.Firefox()
 
 def unset_browser():
-    global browser, display
     if browser:
         browser.quit()
     if display:
@@ -48,15 +47,15 @@ def get_quotes(plan):
         index = n + 1
         try:
             nth_el = content_div.find_element_by_xpath('./*[{index}]'.format(index=index))
+
+            price_el = nth_el.find_element_by_class_name('results_price')
+            price = price_el.text[1:]
+
+            flight_holder_el = nth_el.find_element_by_class_name('legholder')
+            flights = flight_holder_el.text
         except exceptions.NoSuchElementException:
             print 'Could not find price', n, 'for', plan.legs_friendly
             return None, None
-
-        price_el = nth_el.find_element_by_class_name('results_price')
-        price = price_el.text[1:]
-
-        flight_holder_el = nth_el.find_element_by_class_name('legholder')
-        flights = flight_holder_el.text
 
         price = int(float(price))
         return price, flights
@@ -68,7 +67,7 @@ def get_quotes(plan):
         itinerary, _ = Itinerary.objects.get_or_create(
                 flights=flights, plan=plan)
         quote = Quote.objects.create(
-                itinerary=itinerary, price=price, position=position)
+                plan=plan, itinerary=itinerary, price=price, position=position)
 
         if position == 1:
             if NOISY:
@@ -82,7 +81,7 @@ def term_display(plan, itinerary, quote):
     print
 
 def send_price_email(plan, itinerary, quote):
-    quotes = itinerary.quote_set.order_by('-collected_dt').limit(2)
+    quotes = plan.quote_set.order_by('-collected_dt').filter(position=1).limit(2)
     if len(quotes) < 2:
         return
     last_quote, sec_last_quote = quotes
@@ -137,12 +136,14 @@ def safe_get_quotes(plan):
 def run():
     ensure_plans()
     while True:
-        set_browser()
-        for plan in Plan.objects.all():
-            safe_get_quotes(plan)
-        print 'Checkin:', datetime.now()
-        checkin_mail()
-        unset_browser()
+        try:
+            set_browser()
+            for plan in Plan.objects.all():
+                safe_get_quotes(plan)
+            print 'Checkin:', datetime.now()
+            checkin_mail()
+        finally:
+            unset_browser()
         sleep(60*60)
 
 if __name__ == '__main__':
