@@ -135,16 +135,25 @@ def safe_get_quotes(plan):
 
 def run():
     ensure_plans()
+    attempt = 0
     while True:
         try:
             set_browser()
             for plan in Plan.objects.all():
                 safe_get_quotes(plan)
+        except Exception, e:
+            attempt += 1
+            print 'Caught exception in main loop, trying again:', e
+        else:
+            attempt = 0
             print 'Checkin:', datetime.now()
             checkin_mail()
+            sleep(60*60)
         finally:
-            unset_browser()
-        sleep(60*60)
+            try:
+                unset_browser()
+            except Exception, e:
+                print 'Exception trying to unset browser', e
 
 if __name__ == '__main__':
     run()
